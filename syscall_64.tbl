@@ -1,0 +1,1 @@
+SYSCALL_NUM 64 mycall sys_mycall

@@ -1,0 +1,76 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+env:
+  NAME: ${{secrets.NAME}}
+  ID: ${{secrets.ID}}
+  
+  KERNEL_VERSION: "v5.4"
+  
+  BUILD_TYPE: Debug
+  KERNEL_PREFIX: "linux-kernel"
+  KERNEL_SYSCALL_TBL_PATH: "/arch/x86/entry/syscalls/syscall_64.tbl"
+  KERNEL_SYSCALL_H_PATH: "/arch/x86/include/asm/syscalls.h"
+  KERNEL_SYSCALL_C_PATH: "/kernel/sys.c"
+
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-20.04
+
+    steps:
+
+    - name: Checkout current repo  
+      uses: actions/checkout@v3
+
+    - name: Checkout kernel repo
+      uses: actions/checkout@v3
+      with:
+        # Repository name with owner. For example, actions/checkout
+        # Default: ${{ github.repository }}
+        repository: 'torvalds/linux'
+        ref: ${{env.KERNEL_VERSION}}
+        path: ${{env.KERNEL_PREFIX}}
+
+    - name: generate file
+      run: |
+        ./replace.sh
+
+    - name: install dependencies
+      run: |
+          sudo apt install -y libelf-dev
+
+    - name: build kernel
+      working-directory: ${{env.KERNEL_PREFIX}}
+      run: |
+        make defconfig
+        make -j $(nproc) deb-pkg
+        echo "================ls================"
+        ls -al ..
+        echo "=================================="
+
+    - name: 'Upload bzImage Artifact'
+      uses: actions/upload-artifact@v3
+      with:
+        name: bzImage
+        path: ${{env.KERNEL_PREFIX}}/arch/x86/boot/bzImage
+        retention-days: 5
+
+    - name: 'Upload deb Artifact'
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-kernel-deb-${{env.KERNEL_VERSION}}
+        path: "*.deb"
+        retention-days: 5
+
+    # - name: Release
+    #   uses: softprops/action-gh-release@v1
+    #   if: startsWith(github.ref, 'refs/tags/')

@@ -1,0 +1,1 @@
+asmlinkage int sys_mycall(void);
