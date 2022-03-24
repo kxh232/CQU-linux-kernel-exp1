@@ -4,7 +4,7 @@
 * 不占硬盘，直接微调、下载、安装、测试、完事。
 # 使用:
 1. fork
-2. 在`action secrets` (https://github.com/你自己的github账号/CQU-linux-kernel-exp1/settings/secrets/actions)里面添加secrets如下
+2. 在`action secrets` (https://github.com/你自己的账号/CQU-linux-kernel-exp1/settings/secrets/actions/new) 里面添加secrets如下
    
 | secrets name | secrets |
 | ------------ | ------- |
